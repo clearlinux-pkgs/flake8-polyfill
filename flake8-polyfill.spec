@@ -4,7 +4,7 @@
 #
 Name     : flake8-polyfill
 Version  : 1.0.1
-Release  : 1
+Release  : 2
 URL      : https://pypi.python.org/packages/71/6e/dd7e0f0ddf146213d0cc0b963b3d4c6434823ebe3992c29b523182bbf785/flake8-polyfill-1.0.1.tar.gz
 Source0  : https://pypi.python.org/packages/71/6e/dd7e0f0ddf146213d0cc0b963b3d4c6434823ebe3992c29b523182bbf785/flake8-polyfill-1.0.1.tar.gz
 Summary  : Polyfill package for Flake8 plugins
