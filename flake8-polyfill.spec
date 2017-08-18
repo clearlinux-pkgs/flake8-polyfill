@@ -4,9 +4,9 @@
 #
 Name     : flake8-polyfill
 Version  : 1.0.1
-Release  : 2
-URL      : https://pypi.python.org/packages/71/6e/dd7e0f0ddf146213d0cc0b963b3d4c6434823ebe3992c29b523182bbf785/flake8-polyfill-1.0.1.tar.gz
-Source0  : https://pypi.python.org/packages/71/6e/dd7e0f0ddf146213d0cc0b963b3d4c6434823ebe3992c29b523182bbf785/flake8-polyfill-1.0.1.tar.gz
+Release  : 3
+URL      : http://pypi.debian.net/flake8-polyfill/flake8-polyfill-1.0.1.tar.gz
+Source0  : http://pypi.debian.net/flake8-polyfill/flake8-polyfill-1.0.1.tar.gz
 Summary  : Polyfill package for Flake8 plugins
 Group    : Development/Tools
 License  : MIT
@@ -19,9 +19,15 @@ BuildRequires : python3-dev
 BuildRequires : setuptools
 
 %description
-=============================
 Polyfill for Flake8 Plugins
-=============================
+        =============================
+        
+        ``flake8-polyfill`` is a package that provides some compatibility helpers for
+        Flake8 plugins that intend to support Flake8 2.x and 3.x simultaneously.
+        
+        
+        Installation
+        ============
 
 %package python
 Summary: python components for the flake8-polyfill package.
@@ -35,20 +41,27 @@ python components for the flake8-polyfill package.
 %setup -q -n flake8-polyfill-1.0.1
 
 %build
+export http_proxy=http://127.0.0.1:9/
+export https_proxy=http://127.0.0.1:9/
+export no_proxy=localhost,127.0.0.1,0.0.0.0
 export LANG=C
-export SOURCE_DATE_EPOCH=1487899907
+export SOURCE_DATE_EPOCH=1503088906
 python2 setup.py build -b py2
 python3 setup.py build -b py3
 
 %install
-export SOURCE_DATE_EPOCH=1487899907
+export SOURCE_DATE_EPOCH=1503088906
 rm -rf %{buildroot}
 python2 -tt setup.py build -b py2 install --root=%{buildroot} --force
 python3 -tt setup.py build -b py3 install --root=%{buildroot} --force
+echo ----[ mark ]----
+cat %{buildroot}/usr/lib/python3*/site-packages/*/requires.txt || :
+echo ----[ mark ]----
 
 %files
 %defattr(-,root,root,-)
 
 %files python
 %defattr(-,root,root,-)
-/usr/lib/python*/*
+/usr/lib/python2*/*
+/usr/lib/python3*/*
