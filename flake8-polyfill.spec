@@ -4,7 +4,7 @@
 #
 Name     : flake8-polyfill
 Version  : 1.0.2
-Release  : 5
+Release  : 6
 URL      : https://files.pythonhosted.org/packages/e6/67/1c26634a770db5c442e361311bee73cb3a177adb2eb3f7af8953cfd9f553/flake8-polyfill-1.0.2.tar.gz
 Source0  : https://files.pythonhosted.org/packages/e6/67/1c26634a770db5c442e361311bee73cb3a177adb2eb3f7af8953cfd9f553/flake8-polyfill-1.0.2.tar.gz
 Summary  : Polyfill package for Flake8 plugins
@@ -65,7 +65,7 @@ export http_proxy=http://127.0.0.1:9/
 export https_proxy=http://127.0.0.1:9/
 export no_proxy=localhost,127.0.0.1,0.0.0.0
 export LANG=C
-export SOURCE_DATE_EPOCH=1532239638
+export SOURCE_DATE_EPOCH=1532242759
 python3 setup.py build -b py3
 
 %install
