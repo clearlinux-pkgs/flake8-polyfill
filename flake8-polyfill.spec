@@ -4,32 +4,138 @@
 #
 Name     : flake8-polyfill
 Version  : 1.0.2
-Release  : 11
+Release  : 12
 URL      : https://files.pythonhosted.org/packages/e6/67/1c26634a770db5c442e361311bee73cb3a177adb2eb3f7af8953cfd9f553/flake8-polyfill-1.0.2.tar.gz
 Source0  : https://files.pythonhosted.org/packages/e6/67/1c26634a770db5c442e361311bee73cb3a177adb2eb3f7af8953cfd9f553/flake8-polyfill-1.0.2.tar.gz
 Summary  : Polyfill package for Flake8 plugins
 Group    : Development/Tools
 License  : MIT
-Requires: flake8-polyfill-python3
-Requires: flake8-polyfill-license
-Requires: flake8-polyfill-python
+Requires: flake8-polyfill-license = %{version}-%{release}
+Requires: flake8-polyfill-python = %{version}-%{release}
+Requires: flake8-polyfill-python3 = %{version}-%{release}
 Requires: flake8
 BuildRequires : buildreq-distutils3
-BuildRequires : pbr
-BuildRequires : pip
-BuildRequires : python3-dev
-BuildRequires : setuptools
+BuildRequires : flake8
 
 %description
-Polyfill for Flake8 Plugins
-        =============================
-        
-        ``flake8-polyfill`` is a package that provides some compatibility helpers for
-        Flake8 plugins that intend to support Flake8 2.x and 3.x simultaneously.
-        
-        
-        Installation
-        ============
+=============================
+ Polyfill for Flake8 Plugins
+=============================
+
+``flake8-polyfill`` is a package that provides some compatibility helpers for
+Flake8 plugins that intend to support Flake8 2.x and 3.x simultaneously.
+
+
+Installation
+============
+
+.. code-block:: bash
+
+    pip install flake8-polyfill
+
+
+Usage
+=====
+
+Option Handling
+---------------
+
+One problem area with compatibility with Flake8 2.x and 3.x is the registering
+options and receiving the parsed values.
+
+Flake8 3.0 added extra parameters to the ``add_option`` method which don't
+have the same effect on Flake8 2.x. To accomodate the change, this polyfill
+module allows you to do:
+
+.. code-block:: python
+
+    from flake8_polyfill import options
+
+    class MyFlake8Plugin(object):
+        @classmethod
+        def add_options(cls, parser):
+            options.register(parser, '--my-long-option-name',
+                             parse_from_config=True,
+                             comma_separated_list=True,
+                             default='...',
+                             help='...')
+            options.register(parser, '-m', '--my-other-long-option-name',
+                             parse_from_config=True,
+                             normalize_paths=True,
+                             default='...',
+                             help='...')
+
+        @classmethod
+        def parse_options(cls, values):
+            cls.my_long_option_name = values.my_long_option_name
+            cls.my_other_long_option_name = values.my_other_long_option_name
+
+And have the code work the same way on both versions.
+
+Retrieving Standard In
+----------------------
+
+Until Flake8 2.6, getting the code on standard in from a plugin has been
+simple:
+
+.. code-block:: python
+
+    import pep8
+
+    stdin = pep8.get_stdin_value()
+
+In 2.6 you now have to know whether to use ``pep8`` or ``pycodestyle`` since
+Flake8 2.6 made a hard change to ``pycodestyle``.
+
+The reason you need to know which module to use is because standard in can be
+exhausted and Flake8 does some work to cache the value so that call always
+returns the desired data.
+
+In 3.0, Flake8 no longer monkey-patches those modules.
+
+To accommodate this, this package provides:
+
+.. code-block:: python
+
+    from flake8_polyfill import stdin
+
+    stdin.monkey_patch('all')
+    stdin.monkey_patch('pep8')
+    stdin.monkey_patch('pycodestyle')
+
+This allows you to have the polyfill module monkey-patch what you want so it
+is always monkey-patched. It will also do so in an intelligent way.
+
+Version Comparison
+------------------
+
+Flake8 2.x did not include an object that would allow for easy version
+comparison. Flake8 3.0, however, added a ``__version_info__`` attribute. For
+consistency, Flake8 Polyfill will turn 2.x's version string into a tuple
+suitable for comparison.
+
+.. code-block:: python
+
+    from flake8_polyfill import version
+
+    if (2, 4) <= version.version_info < (2, 6):
+        # ...
+    elif (2, 6) <= version.version_info < (3, 0):
+        # ...
+    elif (3, 0) <= version.version_info < (4, 0):
+        # ...
+
+
+License
+=======
+
+MIT
+
+
+Creator
+=======
+
+Ian Cordasco
 
 %package license
 Summary: license components for the flake8-polyfill package.
@@ -42,7 +148,7 @@ license components for the flake8-polyfill package.
 %package python
 Summary: python components for the flake8-polyfill package.
 Group: Default
-Requires: flake8-polyfill-python3
+Requires: flake8-polyfill-python3 = %{version}-%{release}
 
 %description python
 python components for the flake8-polyfill package.
@@ -52,6 +158,7 @@ python components for the flake8-polyfill package.
 Summary: python3 components for the flake8-polyfill package.
 Group: Default
 Requires: python3-core
+Provides: pypi(flake8-polyfill)
 
 %description python3
 python3 components for the flake8-polyfill package.
@@ -59,20 +166,29 @@ python3 components for the flake8-polyfill package.
 
 %prep
 %setup -q -n flake8-polyfill-1.0.2
+cd %{_builddir}/flake8-polyfill-1.0.2
 
 %build
 export http_proxy=http://127.0.0.1:9/
 export https_proxy=http://127.0.0.1:9/
 export no_proxy=localhost,127.0.0.1,0.0.0.0
-export LANG=C
-export SOURCE_DATE_EPOCH=1532242759
-python3 setup.py build -b py3
+export LANG=C.UTF-8
+export SOURCE_DATE_EPOCH=1582924180
+# -Werror is for werrorists
+export GCC_IGNORE_WERROR=1
+export CFLAGS="$CFLAGS -fno-lto "
+export FCFLAGS="$CFLAGS -fno-lto "
+export FFLAGS="$CFLAGS -fno-lto "
+export CXXFLAGS="$CXXFLAGS -fno-lto "
+export MAKEFLAGS=%{?_smp_mflags}
+python3 setup.py build
 
 %install
+export MAKEFLAGS=%{?_smp_mflags}
 rm -rf %{buildroot}
-mkdir -p %{buildroot}/usr/share/doc/flake8-polyfill
-cp LICENSE %{buildroot}/usr/share/doc/flake8-polyfill/LICENSE
-python3 -tt setup.py build -b py3 install --root=%{buildroot}
+mkdir -p %{buildroot}/usr/share/package-licenses/flake8-polyfill
+cp %{_builddir}/flake8-polyfill-1.0.2/LICENSE %{buildroot}/usr/share/package-licenses/flake8-polyfill/0671410ae2fab9ad6a4780d795840208ab774f86
+python3 -tt setup.py build  install --root=%{buildroot}
 echo ----[ mark ]----
 cat %{buildroot}/usr/lib/python3*/site-packages/*/requires.txt || :
 echo ----[ mark ]----
@@ -81,8 +197,8 @@ echo ----[ mark ]----
 %defattr(-,root,root,-)
 
 %files license
-%defattr(-,root,root,-)
-/usr/share/doc/flake8-polyfill/LICENSE
+%defattr(0644,root,root,0755)
+/usr/share/package-licenses/flake8-polyfill/0671410ae2fab9ad6a4780d795840208ab774f86
 
 %files python
 %defattr(-,root,root,-)
